@@ -50,7 +50,10 @@ export class PullRequestServiceImpl {
         )
       ),
       Effect.tap(pullRequestFiles => {
-        if (!pullRequestFiles?.data) {
+        if (!pullRequestFiles) {
+          return Effect.sync(() => core.error('No response received from GitHub API'))
+        }
+        if (!pullRequestFiles.data) {
           return Effect.sync(() => core.error('No files data received from GitHub API'))
         }
         if (pullRequestFiles.data.length === 0) {
@@ -63,14 +66,25 @@ export class PullRequestServiceImpl {
         )
       }),
       Effect.flatMap(pullRequestFiles =>
-        Effect.sync(() =>
-          pullRequestFiles.data.filter(file => {
-            return (
-              excludeFilePatterns.every(pattern => !minimatch(file.filename, pattern, { matchBase: true })) &&
-              (file.status === 'modified' || file.status === 'added' || file.status === 'changed')
-            )
-          })
-        )
+        Effect.sync(() => {
+          try {
+            const filteredFiles = pullRequestFiles.data.filter(file => {
+              return (
+                excludeFilePatterns.every(pattern => !minimatch(file.filename, pattern, { matchBase: true })) &&
+                (file.status === 'modified' || file.status === 'added' || file.status === 'changed')
+              )
+            })
+            
+            if (filteredFiles.length === 0) {
+              core.warning(`No files matched filter criteria. Total files: ${pullRequestFiles.data.length}`)
+            }
+            
+            return filteredFiles
+          } catch (error) {
+            core.error(`Error filtering files: ${error}`)
+            throw error
+          }
+        })
       ),
       Effect.tap(filteredFiles =>
         Effect.sync(() =>

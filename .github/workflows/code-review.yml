@@ -1,39 +1,18 @@
-name: 'code review'
-on: # rebuild any PRs and main branch changes
+name: 'Code Review'
+
+on:
   pull_request:
 
-permissions:
-  contents: read
-  pull-requests: write
-  
 jobs:
   code-review: # make sure the action works on a clean machine without building
-    if: ${{ contains( github.event.label.name, 'AUTO') }}
     runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+      pull-requests: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        id: setup-node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: npm
-
-      - name: Install Dependencies
-        id: npm-ci
-        run: npm ci
-
-      - name: Bundle
-        id: npm-bundle
-        run: npm run bundle
-        
-      - uses: ./
+      - uses: arpitgandhi9/creview@v0.3
         env:
           NODE_OPTIONS: '--experimental-fetch'
         with:

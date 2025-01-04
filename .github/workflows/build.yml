@@ -1,10 +1,7 @@
 name: Continuous Integration
 
 on:
-  pull_request:
   push:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -30,14 +27,6 @@ jobs:
         id: npm-ci
         run: npm ci
 
-      - name: Check Format
-        id: npm-format-check
-        run: npm run format:check
-
-      - name: Lint
-        id: npm-lint
-        run: npm run lint
-
-      - name: Test
-        id: npm-ci-test
-        run: npm run ci-test
+      - name: Build and Test
+        id: npm-check-all
+        run: npm run all
